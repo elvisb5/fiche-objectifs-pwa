@@ -802,25 +802,43 @@ function calculateMonthlyStats(year, month) {
   return stats;
 }
 
-// ── PWA Install ──
+// ── PWA Install & iOS guidance ──
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  document.getElementById('install-banner').classList.remove('hidden');
+  document.getElementById('install-banner')?.classList.remove('hidden');
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Install button
+  // iOS Safari check
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+
+  const banner = document.getElementById('install-banner');
+  if (isIOS && !isStandalone && banner) {
+    const bannerContent = banner.querySelector('.install-banner-content');
+    if (bannerContent) {
+      bannerContent.innerHTML = `
+        <span style="font-size:12px;">📲 <b>iPhone</b> : Appuie sur <b>Partager 📤</b> puis <b>"Sur l'écran d'accueil" ➕</b></span>
+        <div class="install-banner-actions">
+          <button id="install-dismiss" class="btn-dismiss">✕</button>
+        </div>
+      `;
+      banner.classList.remove('hidden');
+    }
+  }
+
+  // Install button (Android / Chrome)
   document.getElementById('install-btn')?.addEventListener('click', async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
-    document.getElementById('install-banner').classList.add('hidden');
+    document.getElementById('install-banner')?.classList.add('hidden');
   });
 
   document.getElementById('install-dismiss')?.addEventListener('click', () => {
-    document.getElementById('install-banner').classList.add('hidden');
+    document.getElementById('install-banner')?.classList.add('hidden');
   });
 
   // Navigation arrows
