@@ -17,6 +17,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -39,7 +42,38 @@
       <p id="header-subtitle">7 Août 2026</p>
     </div>
     <button id="next-btn" class="nav-arrow" aria-label="Suivant">›</button>
+    <button id="cloud-btn" class="nav-arrow" title="Connexion Cloud Firebase">☁️</button>
   </header>
+
+  <!-- Firebase Modal -->
+  <div id="firebase-modal" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🔥 Sync Cloud Firebase</h2>
+        <button id="modal-close" class="btn-dismiss">✕</button>
+      </div>
+      <p class="modal-desc">Connecte ton projet Firebase gratuit pour sauvegarder tes progrès dans le Cloud en temps réel et les retrouver sur tous tes appareils.</p>
+      
+      <div class="form-group">
+        <label>Colle ton objet `firebaseConfig` ou tes identifiants :</label>
+        <textarea id="firebase-config-input" class="text-area" style="min-height:110px;font-family:monospace;font-size:11px;" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "mon-app.firebaseapp.com",
+  "databaseURL": "https://mon-app-default-rtdb.firebaseio.com",
+  "projectId": "mon-app",
+  "storageBucket": "mon-app.appspot.com",
+  "messagingSenderId": "1234...",
+  "appId": "1:1234..."
+}'></textarea>
+      </div>
+
+      <div class="modal-status" id="firebase-status-text">🔴 Non connecté à Firebase (Sauvegarde locale active)</div>
+
+      <div class="modal-actions">
+        <button id="save-firebase-btn" class="btn-install" style="width:100%;">Connecter & Synchroniser</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Score Banner (daily view) -->
   <div id="score-banner" class="score-banner">

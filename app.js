@@ -54,6 +54,57 @@ let deferredPrompt = null;
 let saveTimeout = null;
 
 // ── Data Layer ──
+const FIREBASE_CONFIG_KEY = 'firebase-config-storage';
+let firebaseDb = null;
+
+function initFirebase() {
+  const savedConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
+  const statusEl = document.getElementById('firebase-status-text');
+  const cloudBtn = document.getElementById('cloud-btn');
+  const inputEl = document.getElementById('firebase-config-input');
+
+  if (inputEl && savedConfig) {
+    inputEl.value = savedConfig;
+  }
+
+  if (!savedConfig || !window.firebase) return false;
+
+  try {
+    const config = JSON.parse(savedConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(config);
+    }
+    firebaseDb = firebase.database();
+
+    // Listen for cloud updates in real-time
+    firebaseDb.ref('user_objectifs').on('value', (snapshot) => {
+      const cloudData = snapshot.val();
+      if (cloudData && typeof cloudData === 'object') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
+        if (currentView === 'daily') renderDailyView();
+        if (currentView === 'calendar') renderCalendarView();
+        if (currentView === 'synthesis') renderSynthesisView();
+      }
+    });
+
+    if (statusEl) statusEl.textContent = '🟢 Connecté à Firebase Realtime Cloud !';
+    if (cloudBtn) cloudBtn.classList.add('connected');
+    return true;
+  } catch (err) {
+    console.error('Firebase init error:', err);
+    if (statusEl) statusEl.textContent = '🔴 Erreur de configuration Firebase';
+    if (cloudBtn) cloudBtn.classList.remove('connected');
+    return false;
+  }
+}
+
+function syncToFirebase() {
+  if (firebaseDb) {
+    const allData = getAllData();
+    firebaseDb.ref('user_objectifs').set(allData).catch(err => console.error('Firebase push error:', err));
+  }
+}
+
 function getAllData() {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
@@ -64,6 +115,7 @@ function getAllData() {
 
 function saveAllData(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  syncToFirebase();
 }
 
 function dateKey(d) {
@@ -839,6 +891,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('install-dismiss')?.addEventListener('click', () => {
     document.getElementById('install-banner')?.classList.add('hidden');
+  });
+
+  // Firebase Modal & Init
+  initFirebase();
+
+  const cloudBtn = document.getElementById('cloud-btn');
+  const firebaseModal = document.getElementById('firebase-modal');
+  const modalClose = document.getElementById('modal-close');
+  const saveFirebaseBtn = document.getElementById('save-firebase-btn');
+
+  cloudBtn?.addEventListener('click', () => {
+    firebaseModal?.classList.remove('hidden');
+  });
+
+  modalClose?.addEventListener('click', () => {
+    firebaseModal?.classList.add('hidden');
+  });
+
+  saveFirebaseBtn?.addEventListener('click', () => {
+    const inputVal = document.getElementById('firebase-config-input')?.value.trim();
+    if (!inputVal) {
+      localStorage.removeItem(FIREBASE_CONFIG_KEY);
+      location.reload();
+      return;
+    }
+    try {
+      JSON.parse(inputVal);
+      localStorage.setItem(FIREBASE_CONFIG_KEY, inputVal);
+      const success = initFirebase();
+      if (success) {
+        syncToFirebase();
+        setTimeout(() => {
+          firebaseModal?.classList.add('hidden');
+        }, 800);
+      }
+    } catch (e) {
+      alert('Format JSON invalide. Assure-toi de coller un objet JSON valide.');
+    }
   });
 
   // Navigation arrows
