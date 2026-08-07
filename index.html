@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f0f1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Suivi quotidien de mes objectifs — Discipline, Constance, Excellence">
+  <title>Mes Objectifs Journaliers</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Install Banner -->
+  <div id="install-banner" class="install-banner hidden">
+    <div class="install-banner-content">
+      <span>📲 Installer l'application</span>
+      <div class="install-banner-actions">
+        <button id="install-btn" class="btn-install">Installer</button>
+        <button id="install-dismiss" class="btn-dismiss">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header id="app-header">
+    <button id="prev-btn" class="nav-arrow" aria-label="Précédent">‹</button>
+    <div class="header-center" id="header-center">
+      <h1 id="header-title">Aujourd'hui</h1>
+      <p id="header-subtitle">7 Août 2026</p>
+    </div>
+    <button id="next-btn" class="nav-arrow" aria-label="Suivant">›</button>
+  </header>
+
+  <!-- Score Banner (daily view) -->
+  <div id="score-banner" class="score-banner">
+    <div class="score-ring" id="score-ring">
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" class="score-ring-bg"/>
+        <circle cx="50" cy="50" r="42" class="score-ring-fill" id="score-ring-fill"/>
+      </svg>
+      <div class="score-ring-text">
+        <span class="score-value" id="score-value">0</span>
+        <span class="score-total">/19</span>
+      </div>
+    </div>
+    <div class="score-details">
+      <div class="score-label">Score du jour</div>
+      <div class="score-message" id="score-message">Commence ta journée !</div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="main-content">
+
+    <!-- ===== DAILY VIEW ===== -->
+    <div id="daily-view" class="view active">
+      <div id="objectives-container"></div>
+    </div>
+
+    <!-- ===== CALENDAR VIEW ===== -->
+    <div id="calendar-view" class="view">
+      <div id="calendar-container"></div>
+    </div>
+
+    <!-- ===== SYNTHESIS VIEW ===== -->
+    <div id="synthesis-view" class="view">
+      <div id="synthesis-container"></div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav id="bottom-nav">
+    <button class="nav-tab active" data-view="daily">
+      <span class="nav-tab-icon">📋</span>
+      <span class="nav-tab-label">Aujourd'hui</span>
+    </button>
+    <button class="nav-tab" data-view="calendar">
+      <span class="nav-tab-icon">📅</span>
+      <span class="nav-tab-label">Calendrier</span>
+    </button>
+    <button class="nav-tab" data-view="synthesis">
+      <span class="nav-tab-icon">📊</span>
+      <span class="nav-tab-label">Synthèse</span>
+    </button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
