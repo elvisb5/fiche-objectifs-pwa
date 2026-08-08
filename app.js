@@ -172,7 +172,95 @@ function debouncedSave() {
     const data = collectCurrentDayData();
     saveDayData(currentDate, data);
     updateScoreBanner(data);
+    updateGamificationUI();
   }, 300);
+}
+
+function toggleObjective(el) {
+  const wasChecked = el.classList.contains('checked');
+  el.classList.toggle('checked');
+  debouncedSave();
+  updateSectionProgress();
+
+  if (!wasChecked) {
+    fireConfetti();
+  }
+
+  // Check if perfect score reached
+  const data = collectCurrentDayData();
+  if (data.score >= TOTAL_CHECKABLE) {
+    fireConfetti();
+  }
+
+  if (navigator.vibrate) navigator.vibrate(15);
+}
+
+// ── Timer Functions ──
+function formatTimerDigits(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function updateTimerDisplay() {
+  const digits = document.getElementById('timer-digits');
+  if (digits) digits.textContent = formatTimerDigits(timerSecondsLeft);
+}
+
+function openTimerModal(type) {
+  const modal = document.getElementById('timer-modal');
+  const title = document.getElementById('timer-modal-title');
+  if (type === 'trading') {
+    if (title) title.textContent = '⏱️ Minuteur Trading (1h30 - 2h)';
+    timerInitialSeconds = 5400; // 1h30
+  } else {
+    if (title) title.textContent = '⏱️ Minuteur Lecture (30 min)';
+    timerInitialSeconds = 1800; // 30 min
+  }
+  timerSecondsLeft = timerInitialSeconds;
+  updateTimerDisplay();
+  modal?.classList.remove('hidden');
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  document.getElementById('timer-start-btn')?.classList.add('hidden');
+  document.getElementById('timer-pause-btn')?.classList.remove('hidden');
+  const label = document.getElementById('timer-status-label');
+  if (label) label.textContent = 'En cours...';
+
+  timerInterval = setInterval(() => {
+    if (timerSecondsLeft > 0) {
+      timerSecondsLeft--;
+      updateTimerDisplay();
+    } else {
+      clearInterval(timerInterval);
+      if (label) label.textContent = ' Session terminée ! 🎉';
+      fireConfetti();
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      document.getElementById('timer-start-btn')?.classList.remove('hidden');
+      document.getElementById('timer-pause-btn')?.classList.add('hidden');
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  clearInterval(timerInterval);
+  document.getElementById('timer-start-btn')?.classList.remove('hidden');
+  document.getElementById('timer-pause-btn')?.classList.add('hidden');
+  const label = document.getElementById('timer-status-label');
+  if (label) label.textContent = 'En pause';
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerSecondsLeft = timerInitialSeconds;
+  updateTimerDisplay();
+  document.getElementById('timer-start-btn')?.classList.remove('hidden');
+  document.getElementById('timer-pause-btn')?.classList.add('hidden');
+  const label = document.getElementById('timer-status-label');
+  if (label) label.textContent = 'Prêt à démarrer';
 }
 
 function createEmptyDay() {
@@ -187,11 +275,133 @@ function createEmptyDay() {
   };
 }
 
-function calculateScore(data) {
-  let score = 0;
-  OBJECTIVES.forEach(obj => { if (data.objectives[obj.id]) score++; });
-  MEALS.forEach(meal => { if (data.meals[meal.id]) score++; });
-  return score;
+// ── Dynamic Gamification & Timers State ──
+const THEME_KEY = 'user-selected-theme';
+const BADGES = [
+  { id: 'perfect_day',    icon: '👑', title: 'Journée Parfaite', desc: 'Valider 100% des objectifs en 1 jour' },
+  { id: 'smoke_free_7',   icon: '🚭', title: 'Poumon Pur',       desc: '7 jours consécutifs sans fumer' },
+  { id: 'alcohol_free_7', icon: '🍷', title: 'Esprit Clair',     desc: '7 jours consécutifs sans alcool' },
+  { id: 'water_master',   icon: '💧', title: 'Hydratation Max',  desc: 'Boire 16 verres d\'eau dans la journée' },
+  { id: 'saver_gold',     icon: '💰', title: 'Épargnant d\'Élite',desc: 'Mettre au moins 5 fois 200 FCFA de côté' },
+  { id: 'trader_pro',     icon: '📈', title: 'Discipline Trading',desc: 'Valider l\'entraînement trading 5 jours' }
+];
+
+let timerInterval = null;
+let timerSecondsLeft = 5400; // 1h30 default
+let timerInitialSeconds = 5400;
+
+function fireConfetti() {
+  if (typeof window.confetti === 'function') {
+    window.confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  }
+}
+
+function calculateTotalXP() {
+  const allData = getAllData();
+  let totalXP = 0;
+
+  Object.values(allData).forEach(day => {
+    if (!day) return;
+    // +10 XP per objective checked
+    if (day.objectives) {
+      Object.values(day.objectives).forEach(v => { if (v) totalXP += 10; });
+    }
+    // +5 XP per meal
+    if (day.meals) {
+      Object.values(day.meals).forEach(v => { if (v) totalXP += 5; });
+    }
+    // +2 XP per water drop
+    if (day.water) {
+      day.water.forEach(v => { if (v) totalXP += 2; });
+    }
+    // Bonus 50 XP if perfect day
+    const score = day.score || 0;
+    if (score >= TOTAL_CHECKABLE) totalXP += 50;
+  });
+
+  return totalXP;
+}
+
+function getLevelInfo(xp) {
+  if (xp < 100) return { level: 1, name: 'Apprenti', min: 0, max: 100 };
+  if (xp < 250) return { level: 2, name: 'Bronze', min: 100, max: 250 };
+  if (xp < 500) return { level: 3, name: 'Argent', min: 250, max: 500 };
+  if (xp < 1000) return { level: 4, name: 'Guerrier Gold', min: 500, max: 1000 };
+  if (xp < 2000) return { level: 5, name: 'Maître Titan', min: 1000, max: 2000 };
+  return { level: 6, name: 'Légende Utile', min: 2000, max: 5000 };
+}
+
+function updateGamificationUI() {
+  const xp = calculateTotalXP();
+  const info = getLevelInfo(xp);
+
+  const levelBadge = document.getElementById('user-level-badge');
+  if (levelBadge) levelBadge.textContent = `⭐ Niv. ${info.level} ${info.name}`;
+
+  const currentText = document.getElementById('xp-current-text');
+  const nextText = document.getElementById('xp-next-text');
+  const fill = document.getElementById('xp-bar-fill');
+
+  if (currentText) currentText.textContent = `${xp} XP`;
+  if (nextText) nextText.textContent = `${info.max - xp} XP niv. suivant`;
+
+  const pct = Math.min(100, Math.max(0, ((xp - info.min) / (info.max - info.min)) * 100));
+  if (fill) fill.style.width = `${pct}%`;
+
+  // Update unlocked badges count
+  const unlocked = getUnlockedBadges();
+  const badgeCountEl = document.getElementById('badge-count');
+  if (badgeCountEl) badgeCountEl.textContent = `${unlocked.length}/${BADGES.length}`;
+}
+
+function getUnlockedBadges() {
+  const allData = getAllData();
+  const unlocked = new Set();
+
+  let perfectDays = 0;
+  let waterMaxCount = 0;
+  let saveCount = 0;
+  let tradeCount = 0;
+
+  Object.values(allData).forEach(day => {
+    if (!day) return;
+    if ((day.score || 0) >= TOTAL_CHECKABLE) unlocked.add('perfect_day');
+    if (day.water && day.water.filter(Boolean).length >= 16) unlocked.add('water_master');
+    if (day.objectives && day.objectives.save200) saveCount++;
+    if (day.objectives && day.objectives.trading) tradeCount++;
+  });
+
+  if (saveCount >= 5) unlocked.add('saver_gold');
+  if (tradeCount >= 5) unlocked.add('trader_pro');
+
+  // Check streaks for smoke/alcohol free
+  const stats = calculateMonthlyStats(currentDate.getFullYear(), currentDate.getMonth());
+  if (stats.streaks.nosmoke && stats.streaks.nosmoke.longest >= 7) unlocked.add('smoke_free_7');
+  if (stats.streaks.noalcohol && stats.streaks.noalcohol.longest >= 7) unlocked.add('alcohol_free_7');
+
+  return Array.from(unlocked);
+}
+
+function renderBadgesModal() {
+  const container = document.getElementById('badges-container');
+  if (!container) return;
+  const unlocked = getUnlockedBadges();
+
+  let html = '';
+  BADGES.forEach(b => {
+    const isUnlocked = unlocked.includes(b.id);
+    html += `<div class="badge-item ${isUnlocked ? 'unlocked' : ''}">`;
+    html += `  <div class="badge-icon">${b.icon}</div>`;
+    html += `  <div class="badge-title">${b.title}</div>`;
+    html += `  <div class="badge-desc">${b.desc}</div>`;
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
 }
 
 function collectCurrentDayData() {
@@ -308,6 +518,9 @@ function renderDailyView() {
         html += `    <div class="objective-detail">${obj.detail}</div>`;
       }
       html += `  </div>`;
+      if (obj.id === 'trading' || obj.id === 'read') {
+        html += `  <button class="badges-trigger" style="margin-right:6px;" onclick="event.stopPropagation(); openTimerModal('${obj.id}')">⏱️ Minuteur</button>`;
+      }
       if (obj.detail && !obj.detail.startsWith('🚫')) {
         html += `  <div class="objective-badge">${obj.detail}</div>`;
       }
@@ -890,6 +1103,60 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Theme initialization
+  const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+  document.body.dataset.theme = savedTheme;
+
+  document.querySelectorAll('.theme-card').forEach(card => {
+    card.classList.toggle('active', card.dataset.setTheme === savedTheme);
+    card.addEventListener('click', () => {
+      const theme = card.dataset.setTheme;
+      document.body.dataset.theme = theme;
+      localStorage.setItem(THEME_KEY, theme);
+      document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      document.getElementById('theme-modal')?.classList.add('hidden');
+    });
+  });
+
+  // Modal triggers
+  document.getElementById('theme-btn')?.addEventListener('click', () => {
+    document.getElementById('theme-modal')?.classList.remove('hidden');
+  });
+
+  document.getElementById('theme-modal-close')?.addEventListener('click', () => {
+    document.getElementById('theme-modal')?.classList.add('hidden');
+  });
+
+  document.getElementById('badges-btn')?.addEventListener('click', () => {
+    renderBadgesModal();
+    document.getElementById('badges-modal')?.classList.remove('hidden');
+  });
+
+  document.getElementById('badges-modal-close')?.addEventListener('click', () => {
+    document.getElementById('badges-modal')?.classList.add('hidden');
+  });
+
+  document.getElementById('timer-modal-close')?.addEventListener('click', () => {
+    pauseTimer();
+    document.getElementById('timer-modal')?.classList.add('hidden');
+  });
+
+  // Timer controls
+  document.getElementById('timer-start-btn')?.addEventListener('click', startTimer);
+  document.getElementById('timer-pause-btn')?.addEventListener('click', pauseTimer);
+  document.getElementById('timer-reset-btn')?.addEventListener('click', resetTimer);
+
+  document.querySelectorAll('.timer-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const timeSec = parseInt(btn.dataset.time);
+      timerInitialSeconds = timeSec;
+      timerSecondsLeft = timeSec;
+      updateTimerDisplay();
+      resetTimer();
+    });
+  });
+
   // iOS Safari check
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
@@ -1002,6 +1269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Init
   renderDailyView();
+  updateGamificationUI();
   updateHeader();
 });
 

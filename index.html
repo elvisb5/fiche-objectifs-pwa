@@ -17,11 +17,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <!-- Firebase SDK -->
+  <!-- Firebase & Utility SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </head>
-<body>
+<body data-theme="dark">
 
   <!-- Install Banner -->
   <div id="install-banner" class="install-banner hidden">
@@ -39,9 +40,10 @@
     <button id="prev-btn" class="nav-arrow" aria-label="Précédent">‹</button>
     <div class="header-center" id="header-center">
       <h1 id="header-title">Aujourd'hui</h1>
-      <p id="header-subtitle">7 Août 2026</p>
+      <p id="header-subtitle">8 Août 2026</p>
     </div>
     <button id="next-btn" class="nav-arrow" aria-label="Suivant">›</button>
+    <button id="theme-btn" class="nav-arrow" title="Changer le thème">🎨</button>
     <button id="cloud-btn" class="nav-arrow" title="Connexion Cloud Firebase">☁️</button>
   </header>
 
@@ -75,7 +77,7 @@
     </div>
   </div>
 
-  <!-- Score Banner (daily view) -->
+  <!-- Score & XP Banner (daily view) -->
   <div id="score-banner" class="score-banner">
     <div class="score-ring" id="score-ring">
       <svg viewBox="0 0 100 100">
@@ -88,8 +90,86 @@
       </div>
     </div>
     <div class="score-details">
-      <div class="score-label">Score du jour</div>
+      <div class="score-top-row">
+        <span class="level-badge" id="user-level-badge">⭐ Niv. 1 Apprenti</span>
+        <button id="badges-btn" class="badges-trigger" title="Voir mes badges">🏆 <span id="badge-count">0/6</span></button>
+      </div>
       <div class="score-message" id="score-message">Commence ta journée !</div>
+      
+      <!-- XP Bar -->
+      <div class="xp-bar-container">
+        <div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div>
+      </div>
+      <div class="xp-text-row">
+        <span id="xp-current-text">0 XP</span>
+        <span id="xp-next-text">100 XP niv. suivant</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme Selection Modal -->
+  <div id="theme-modal" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🎨 Thèmes Visuels</h2>
+        <button id="theme-modal-close" class="btn-dismiss">✕</button>
+      </div>
+      <div class="theme-grid">
+        <button class="theme-card active" data-set-theme="dark">
+          <div class="theme-preview" style="background:#0f0f1a; border:2px solid #5b8def;"></div>
+          <span>Dark Luxury</span>
+        </button>
+        <button class="theme-card" data-set-theme="cyberpunk">
+          <div class="theme-preview" style="background:#0a0a12; border:2px solid #ff007f;"></div>
+          <span>Cyberpunk</span>
+        </button>
+        <button class="theme-card" data-set-theme="gold">
+          <div class="theme-preview" style="background:#1c1917; border:2px solid #e8a838;"></div>
+          <span>Gold Luxury</span>
+        </button>
+        <button class="theme-card" data-set-theme="emerald">
+          <div class="theme-preview" style="background:#061a12; border:2px solid #4caf76;"></div>
+          <span>Nature Emerald</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Badges Modal -->
+  <div id="badges-modal" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🏆 Trophées & Badges</h2>
+        <button id="badges-modal-close" class="btn-dismiss">✕</button>
+      </div>
+      <div class="badges-grid" id="badges-container"></div>
+    </div>
+  </div>
+
+  <!-- Timer Modal -->
+  <div id="timer-modal" class="modal-backdrop hidden">
+    <div class="modal-content text-center">
+      <div class="modal-header">
+        <h2 id="timer-modal-title">⏱️ Minuteur Trading</h2>
+        <button id="timer-modal-close" class="btn-dismiss">✕</button>
+      </div>
+      
+      <div class="timer-display-ring">
+        <div class="timer-digits" id="timer-digits">01:30:00</div>
+        <div class="timer-label" id="timer-status-label">Prêt à démarrer</div>
+      </div>
+
+      <div class="timer-presets">
+        <button class="timer-preset-btn" data-time="5400">1h30</button>
+        <button class="timer-preset-btn" data-time="7200">2h00</button>
+        <button class="timer-preset-btn" data-time="1800">30 min</button>
+      </div>
+
+      <div class="timer-controls">
+        <button id="timer-start-btn" class="btn-timer-action btn-start">▶ Démarrer</button>
+        <button id="timer-pause-btn" class="btn-timer-action btn-pause hidden">⏸ Pause</button>
+        <button id="timer-reset-btn" class="btn-timer-action btn-reset">🔄 Réinitialiser</button>
+      </div>
     </div>
   </div>
 
