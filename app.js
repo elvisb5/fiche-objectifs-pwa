@@ -1217,6 +1217,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   });
 
+  document.getElementById('reset-all-data-btn')?.addEventListener('click', () => {
+    if (confirm('Es-tu sûr de vouloir remettre TOUS les compteurs, notes et scores à zéro ?')) {
+      localStorage.removeItem(STORAGE_KEY);
+      if (firebaseDb) {
+        firebaseDb.ref('user_objectifs_elvisb5').remove().catch(() => {});
+      }
+      currentDate = new Date();
+      renderDailyView();
+      updateGamificationUI();
+      updateHeader();
+      alert('Tous tes compteurs ont été remis à zéro avec succès ! 🔄');
+      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.add('hidden'));
+    }
+  });
+
   // Modal triggers
   document.getElementById('theme-btn')?.addEventListener('click', () => {
     document.getElementById('theme-modal')?.classList.remove('hidden');
