@@ -262,22 +262,23 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 8px;
+  padding: 0 10px;
+  gap: 4px;
   height: var(--header-height);
-  background: rgba(15, 15, 26, 0.85);
+  background: rgba(15, 15, 26, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
 }
 
 .nav-arrow {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   border: none;
   background: var(--bg-card);
   color: var(--text);
-  font-size: 22px;
-  border-radius: 12px;
+  font-size: 15px;
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;

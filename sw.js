@@ -1,4 +1,4 @@
-const CACHE_NAME = 'objectifs-v2';
+const CACHE_NAME = 'objectifs-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -30,6 +30,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request).catch(() => caches.match(e.request))
   );
 });
