@@ -43,9 +43,61 @@
       <p id="header-subtitle">8 Août 2026</p>
     </div>
     <button id="next-btn" class="nav-arrow" aria-label="Suivant">›</button>
+    <button id="reminders-btn" class="nav-arrow" title="Rappels & Sonnerie">🔔</button>
     <button id="theme-btn" class="nav-arrow" title="Changer le thème">🎨</button>
     <button id="cloud-btn" class="nav-arrow" title="Connexion Cloud Firebase">☁️</button>
   </header>
+
+  <!-- Reminders & Alarm Modal -->
+  <div id="reminders-modal" class="modal-backdrop hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🔔 Rappels & Sonnerie d'Alarme</h2>
+        <button id="reminders-modal-close" class="btn-dismiss">✕</button>
+      </div>
+      <p class="modal-desc">Active les notifications et la sonnerie pour ne jamais oublier tes objectifs quotidiens.</p>
+      
+      <div class="form-group" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface); padding:10px 12px; border-radius:var(--radius-xs);">
+        <div>
+          <div style="font-size:13px; font-weight:700;">Notifications Push</div>
+          <div style="font-size:10px; color:var(--text-muted);" id="notif-status-text">Permission non accordée</div>
+        </div>
+        <button id="request-notif-btn" class="btn-install" style="padding:6px 12px; font-size:11px;">Autoriser 🔔</button>
+      </div>
+
+      <div class="form-group" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface); padding:10px 12px; border-radius:var(--radius-xs); margin-top:8px;">
+        <div>
+          <div style="font-size:13px; font-weight:700;">Sonnerie d'Alarme 🔊</div>
+          <div style="font-size:10px; color:var(--text-muted);">Faire sonner le téléphone lors du rappel</div>
+        </div>
+        <button id="test-sound-btn" class="btn-timer-action btn-start" style="padding:6px 12px; font-size:11px;">Tester le son 🔊</button>
+      </div>
+
+      <div class="text-section-label" style="margin-top:14px;">⏰ Horaires des Rappels Automatiques</div>
+      <div class="reminders-list">
+        <div class="reminder-item">
+          <span>🌅 <b>06:00</b> — Réveil, Prière & Pas de tel</span>
+          <input type="checkbox" class="reminder-toggle" data-time="06:00" checked>
+        </div>
+        <div class="reminder-item">
+          <span>💧 <b>12:00</b> — Hydratation & Déjeuner</span>
+          <input type="checkbox" class="reminder-toggle" data-time="12:00" checked>
+        </div>
+        <div class="reminder-item">
+          <span>📈 <b>15:00</b> — Session Trading (1h30 - 2h)</span>
+          <input type="checkbox" class="reminder-toggle" data-time="15:00" checked>
+        </div>
+        <div class="reminder-item">
+          <span>📚 <b>18:00</b> — Lecture 20 pages</span>
+          <input type="checkbox" class="reminder-toggle" data-time="18:00" checked>
+        </div>
+        <div class="reminder-item">
+          <span>🌙 <b>21:00</b> — Récap & Planification Demain</span>
+          <input type="checkbox" class="reminder-toggle" data-time="21:00" checked>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Firebase Modal -->
   <div id="firebase-modal" class="modal-backdrop hidden">

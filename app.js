@@ -275,7 +275,86 @@ function createEmptyDay() {
   };
 }
 
-// ── Dynamic Gamification & Timers State ──
+// ── Alarm Sound & Notification Engine ──
+function playAlarmSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+
+    const playBeep = (freq, startTime, duration) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.3, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
+
+    const now = ctx.currentTime;
+    playBeep(880, now, 0.15);
+    playBeep(880, now + 0.25, 0.15);
+    playBeep(880, now + 0.5, 0.15);
+    playBeep(1046.5, now + 0.75, 0.4);
+  } catch (e) {
+    console.error('Audio error:', e);
+  }
+}
+
+function requestNotificationPermission() {
+  if ('Notification' in window) {
+    Notification.requestPermission().then(permission => {
+      updateNotifStatusUI(permission);
+      if (permission === 'granted') {
+        new Notification('🔔 Notifications activées !', {
+          body: 'Tu recevras désormais tes rappels quotidiens et alerte sonore.',
+          icon: 'icon-192.png'
+        });
+      }
+    });
+  } else {
+    alert('Les notifications web ne sont pas supportées par ce navigateur.');
+  }
+}
+
+function updateNotifStatusUI(permission) {
+  const perm = permission || (window.Notification ? Notification.permission : 'denied');
+  const statusEl = document.getElementById('notif-status-text');
+  if (statusEl) {
+    if (perm === 'granted') statusEl.textContent = '🟢 Notifications autorisées';
+    else if (perm === 'denied') statusEl.textContent = '🔴 Notifications bloquées dans les réglages';
+    else statusEl.textContent = '🟡 Permission non demandée';
+  }
+}
+
+let lastNotifiedMinute = '';
+function startReminderChecker() {
+  setInterval(() => {
+    const now = new Date();
+    const currentTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    
+    if (currentTimeStr === lastNotifiedMinute) return;
+
+    const toggles = document.querySelectorAll('.reminder-toggle:checked');
+    toggles.forEach(toggle => {
+      if (toggle.dataset.time === currentTimeStr) {
+        lastNotifiedMinute = currentTimeStr;
+        playAlarmSound();
+        if (window.Notification && Notification.permission === 'granted') {
+          const itemText = toggle.closest('.reminder-item')?.querySelector('span')?.innerText || 'C\'est l\'heure !';
+          new Notification('⏰ Rappel d\'objectif !', {
+            body: itemText,
+            icon: 'icon-192.png'
+          });
+        }
+      }
+    });
+  }, 15000);
+}
 const THEME_KEY = 'user-selected-theme';
 const BADGES = [
   { id: 'perfect_day',    icon: '👑', title: 'Journée Parfaite', desc: 'Valider 100% des objectifs en 1 jour' },
@@ -1117,6 +1196,25 @@ document.addEventListener('DOMContentLoaded', () => {
       card.classList.add('active');
       document.getElementById('theme-modal')?.classList.add('hidden');
     });
+  });
+
+  // Reminders Modal & Sound controls
+  updateNotifStatusUI();
+  startReminderChecker();
+
+  document.getElementById('reminders-btn')?.addEventListener('click', () => {
+    updateNotifStatusUI();
+    document.getElementById('reminders-modal')?.classList.remove('hidden');
+  });
+
+  document.getElementById('reminders-modal-close')?.addEventListener('click', () => {
+    document.getElementById('reminders-modal')?.classList.add('hidden');
+  });
+
+  document.getElementById('request-notif-btn')?.addEventListener('click', requestNotificationPermission);
+  document.getElementById('test-sound-btn')?.addEventListener('click', () => {
+    playAlarmSound();
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   });
 
   // Modal triggers

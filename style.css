@@ -171,6 +171,32 @@ body {
   background: rgba(76, 175, 118, 0.2);
   border: 1px solid var(--health);
 }
+
+/* === REMINDERS STYLES === */
+.reminders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.reminder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+}
+
+.reminder-toggle {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--morning);
+  cursor: pointer;
+}
 .install-banner {
   position: fixed;
   top: 0;
